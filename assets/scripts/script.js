@@ -2,6 +2,8 @@ var now = moment();
 var date  = now.format('YYYYMMDD');
 var hourOfDay = now.format('HH');
 
+var todaysCalendar = getTimeSlotsForDate(date);
+
 function setCurrentDateInHeader(){
     $("#currentDay").text(now.format('MMMM Do YYYY'));
 }
@@ -35,6 +37,7 @@ function addTimeBlockForHour(hour) {
                         .attr("type", "text")
                         .attr("slot", hour)
                         .addClass("col-10 description "+getCssClassForHourStartingAt(hour));
+    slotDescCol.val(getTimeSlotInfoFromLocalStorage(date, hour));
     row.append(slotDescCol);
 
     ////////////////
@@ -44,7 +47,14 @@ function addTimeBlockForHour(hour) {
                     .attr("slot", hour)
                     .addClass("col-1 saveBtn")
                     .text("Save");
+    saveBtn.click(saveTimeSlotDesc);
     row.append(saveBtn);
+}
+
+function saveTimeSlotDesc(){
+    var timeSlot = $(this).attr("slot");
+    var desc = $("input[slot='"+timeSlot+"']").val();
+    setTimeSlotInfoToLocalStorage(date, timeSlot, desc);
 }
 
 function getCssClassForHourStartingAt(hour){
@@ -55,6 +65,33 @@ function getCssClassForHourStartingAt(hour){
     } else {
         return "future";
     }
+}
+
+function getTimeSlotsForDate(date) {
+    if(todaysCalendar != undefined){
+        return todaysCalendar;
+    }
+    var timeSlots = localStorage.getItem(date);
+    if(timeSlots != undefined){
+        return JSON.parse(timeSlots);
+    }
+    return {};
+}
+
+function setTimeSlotInfoToLocalStorage(date, hour, slotDescription){
+    todaysCalendar[hour] = slotDescription;
+    localStorage.setItem(date, JSON.stringify(todaysCalendar));
+}
+
+function getTimeSlotInfoFromLocalStorage(date, hour){
+    if(todaysCalendar == undefined){
+        todaysCalendar = getTimeSlotsForDate(date);
+    }
+    slotDescription = todaysCalendar[hour];
+    if(slotDescription == undefined){
+        return "";
+    }
+    return slotDescription;
 }
 
 setCurrentDateInHeader();
